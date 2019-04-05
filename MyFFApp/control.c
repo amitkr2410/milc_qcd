@@ -33,8 +33,9 @@ int main( int argc, char **argv )
   int s_iters, avs_iters, avbcorr_iters;
   double dtime, dclock();
 
-  //Field-strength variable
-  double Et, Es, charge;
+  //Plaquette and Field-strength variable
+  double ss_plaq=0.0, st_plaq=0.0;
+  complex TraceF3iF3iMinusF4iF4i, TraceF4iF3iPlusF3iF4i;
   
   // Initialization 
   initialize_machine(&argc,&argv);
@@ -62,7 +63,12 @@ int main( int argc, char **argv )
       printf(" Amit MyFFApp/control.c inside while(readin(prompt)==0) \n");
       for( traj_done=0; traj_done < warms; traj_done++ )
       	{
-      	  update();
+	  //rephase(OFF);
+	  ss_plaq=0.0; st_plaq=0.0;
+	  d_plaquette(&ss_plaq, &st_plaq);
+	  printf("Amit MyFFApp/control.c Plaquette = (%e,%e)\n",ss_plaq, st_plaq);	  
+	  //rephase(ON);
+      	  update();	  
         }
       
       node0_printf("default MyFFApp/control.c WARMUPS COMPLETED\n"); fflush(stdout);
@@ -91,31 +97,33 @@ int main( int argc, char **argv )
           #endif /* HISQ_REUNITARIZATION_DEBUG */
           #endif /* MILC_GLOBAL_DEBUG */
 	  printf(" Amit MyFFApp/control.c s_iters=update() will call \n");
+	  
 	  /* do the trajectories */
+	  //rephase(ON);
 	  s_iters=update();
           printf(" Amit MyFFApp/control.c s_iters=update() called \n");
 	  /* measure every "propinterval" trajectories */
-	  //if( (traj_done%propinterval)==(propinterval-1) )
-	  // {	      
+	 if( (traj_done%propinterval)==(propinterval-1) )
+	  {	      
 	      /* call gauge_variable fermion_variable measuring routines */
-	      /* results are printed in output file */
-	      //rephase(OFF);
-	      g_measure( );printf(" Amit MyFFApp/control.c g_measure() called \n");	                  
+	      //rephase(OFF);	      
+	      /* Compute plaquette and display output */
+	      ss_plaq=0.0; st_plaq=0.0;
+	      d_plaquette(&ss_plaq, &st_plaq);
+	      printf("Amit MyFFApp/control.c Plaquette = (%e,%e)\n",ss_plaq, st_plaq);
 	      
 	      /* Calculate trace of fmunu and output */
-	      complex TraceF3iF3iMinusF4iF4i, TraceF4iF3iPlusF3iF4i;
 	      TraceF3iF3iMinusF4iF4i.real = 0.0; TraceF3iF3iMinusF4iF4i.imag = 0.0;
 	      TraceF4iF3iPlusF3iF4i.real = 0.0;  TraceF4iF3iPlusF3iF4i.imag = 0.0;
 	      //rephase(OFF);
 	      fmunu_fmunu(TraceF3iF3iMinusF4iF4i, TraceF4iF3iPlusF3iF4i);
-	      printf("Amit MyFFApp/control.c TraceF3iF3iMinusF4iF4i = (%f,%f)\n",TraceF3iF3iMinusF4iF4i.real, TraceF3iF3iMinusF4iF4i.imag);
-	      printf("Amit MyFFApp/control.c TraceF4iF3iPlusF3iF4i  = (%f,%f)\n",TraceF4iF3iPlusF3iF4i.real, TraceF4iF3iPlusF3iF4i.imag);
-	      //node0_printf("default MyFFApp/control.c WFLOW %g %g %g\n", Et, Es, charge);
+	      printf("Amit MyFFApp/control.c TraceF3iF3iMinusF4iF4i = (%e,%e)\n",TraceF3iF3iMinusF4iF4i.real, TraceF3iF3iMinusF4iF4i.imag);
+	      printf("Amit MyFFApp/control.c TraceF4iF3iPlusF3iF4i  = (%e,%e)\n",TraceF4iF3iPlusF3iF4i.real, TraceF4iF3iPlusF3iF4i.imag);
 	      
 	      avs_iters += s_iters;
 	      MeasurementCount = MeasurementCount + 1;
 	      fflush(stdout);
-	      // }
+	     }
 	}	/* end loop over trajectories */
     
       node0_printf("default MyFFApp/control.c RUNNING COMPLETED\n"); fflush(stdout);

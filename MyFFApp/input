@@ -12,9 +12,9 @@
     dyn_flavors 2 1
     u0  0.890
  
-    warms 4
+    warms 2
     trajecs 2
-    traj_between_meas 0
+    traj_between_meas 1
     microcanonical_time_step .02
     steps_per_trajectory 10
     cgresid_md_fa_gr .0005 .0001 .0001
